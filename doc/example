@@ -1,0 +1,100 @@
+%
+<CHK_P_3> (CHECK PART GRIPPER3)
+(*****************************)
+(CHECK PART WITH GRIPPER 3    )
+(CATERPILLAR - CYLINDER HEAD  ) 
+(COP. LIEBHERR LVT KEMPTEN    ) 
+( GERMANY ) 
+(-----------------------------) 
+(Operation: OP10-30) 
+(Version: 0.01)
+(Date: 03.05.12)
+(Programmer: Jens Rehfeld)
+(*****************************) 
+(*****************************)
+(      ---INITIALIZATION---   )
+(*****************************)
+(part type for current MC -> #532 = #MC_PART)
+G310D[1102+[[#CURR_MC]*10]]A532J1L1
+[#CURR_TP]=10+[#CURR_MC]
+[#X_TARGET]=#[60000+[[#MC_PART]-1]*320+[[#CURR_TP]-1]*8](X2)
+[#X_TARGET]=[#X_TARGET]+#[60000+[[#CURR_TP]-1]](TC offset)
+[#Z_TARGET]=#[60001+[[#MC_PART]-1]*320+[[#CURR_TP]-1]*8](Z3)
+[#C_TARGET]=#[60003+[[#MC_PART]-1]*320+[[#CURR_TP]-1]*8](C3)
+[#A_TARGET]=#[60005+[[#MC_PART]-1]*320+[[#CURR_TP]-1]*8](A3)
+[#MC_SYNCR]=110+[#CURR_MC](synchron value)
+
+(--invalid part type or current MC--)
+IF[[[#MC_PART]LT1]OR[[#MC_PART]GT32]]GOTO900 (ERROR)
+IF[[[#CURR_MC]LT1]OR[[#CURR_MC]GT11]]GOTO905 (ERROR)
+
+(--pre-position--)
+IF[[#CURR_MC]LT3]THEN#3=[#Z_TARGET]+[#P_OP10_Z] (OP10)
+IF[[[#CURR_MC]GE3]AND[[#CURR_MC]LT7]]THEN#3=[#Z_TARGET]+[#P_OP20_Z] (OP20)
+IF[[#CURR_MC]GE7]THEN#3=[#Z_TARGET]+[#P_OP20_Z] (OP30)
+
+(*****************************)
+(  ---END INITIALIZATION---   )
+(*****************************)
+
+
+(*****************************)
+(   ---CHECKPART GRIPPER3---  )
+(*****************************)
+
+(---     rotate C-Axis     ---)
+(search nearest Rotate Position)
+IF[[#CURR_MC]LT3]THEN#4=[R_CPOS_1](First Rotate Position)
+IF[[#CURR_MC]GE3]AND[[#CURR_MC]LT7]]THEN#4=#60168(X2 TP SPC OP20)
+IF[[#CURR_MC]GE7]THEN#4=#60176(X2 TP SPC OP30)
+
+(###       HANDSHAKE       ###)
+#111=#4(Global Target Pos)
+#112=1 (request move enable)
+M98<HS_MP_C2> (Handshake master process carriage2)
+IF[#110NE0]GOTO1000 (move enabled)
+(###     END HANDSHAKE     ###)
+
+G61X2=#4F[H_FEED_X] (move to Rotate Position)
+G61C3=[#C_TARGET]F[#H_FEED_C] (rotate C-Axis)
+(---   END rotate C-Axis   ---)
+
+(###       HANDSHAKE       ###)
+#111=[#X_TARGET](Global Target Pos)
+#112=1 (request move enable)
+M98<HS_MP_C2> (Handshake master process carriage2)
+IF[#110NE0]GOTO1000 (move enabled)
+(###     END HANDSHAKE     ###)
+
+IF[[#CURR_MC]GE3]GOTO100(OP10 MCx locked for other Channel)
+M[120+[#CURR_MC]](LOCK MASCHINE FOR OTHER CHANNEL)
+N100M[#MC_SYNCR]V1121 (start moving to machine)
+(ersetzbar durch G04 um vorlesen zu stoppen)
+G61X2=[#X_TARGET]F[#H_FEED_X] (move to X-Pos)
+G61A3=[#A_TARGET]F[#H_FEED_A] (move A-Axis)
+M[#MC_SYNCR]V120 (ready to move Z-axis)
+
+G61Z3=[#Z_TARGET]F[#H_FEED_Z] (move gripper to Z-Pos)
+M[#MC_SYNCR]V131 (Z-axis in unload Position)
+M68(CHECK FOR NO PART PRESENT) 
+
+G64Z3=#3F[#L_FEED_Z] (move gripper slow to Z-PrePos)
+M[#MC_SYNCR]V150 (Gripper in PrePos, move fixture to unload pos)
+G61Z3=[#P_INI_Z3]F[#H_FEED_Z] (move Z-Axis to raised pos)
+M[#MC_SYNCR]V161 (Z-Axis raised)
+GOTO1000 (GOTO END)
+(*****************************)
+(---END CHECKPART GRIPPER3--- )
+(*****************************)
+
+
+(*****************************)
+(         ---ERRORS---        )
+(*****************************)
+N900#3000=1 (Unknown part type)
+N905#3000=2 (Unknown MC)
+(*****************************)
+(       ---END ERRORS---      )
+(*****************************)
+N1000M99
+%

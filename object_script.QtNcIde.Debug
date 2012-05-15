@@ -1,0 +1,14 @@
+INPUT(
+./debug\Colors.o
+./debug\FanucCustomIF.o
+./debug\FanucCustom.o
+./debug\OutlineDock.o
+./debug\CustomTabWidget.o
+./debug\MainWindow.o
+./debug\MainWindowSlots.o
+./debug\Main.o
+./debug\moc_OutlineDock.o
+./debug\moc_MainWindow.o
+./debug\moc_CustomTabWidget.o
+./debug\qrc_dockwidgets.o
+);

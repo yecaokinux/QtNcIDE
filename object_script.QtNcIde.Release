@@ -1,0 +1,14 @@
+INPUT(
+./release\Colors.o
+./release\FanucCustomIF.o
+./release\FanucCustom.o
+./release\OutlineDock.o
+./release\CustomTabWidget.o
+./release\MainWindow.o
+./release\MainWindowSlots.o
+./release\Main.o
+./release\moc_OutlineDock.o
+./release\moc_MainWindow.o
+./release\moc_CustomTabWidget.o
+./release\qrc_dockwidgets.o
+);
